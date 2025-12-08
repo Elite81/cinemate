@@ -78,7 +78,7 @@ ROOT_URLCONF = "cinemate.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'movies', 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

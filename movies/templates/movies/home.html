@@ -1,11 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-</head>
-<body>
-    <h1>Hello</h1>
-</body>
-</html>
+{% extends "movies/base.html" %}
+
+{% block content %}
+
+<h1>Popular Movies</h1>
+<div class="row">
+{% for movie in movies %}
+<div class="col-md-3">
+    <img src="https://image.tmdb.org/t/p/w500{{movie.poster_path}}" class="card-img-top" alt="{{movie.title}}">
+    <div class="card-body">
+        <h5>{{ movie.title}}</h5>
+        <p class="card-text">Ratings: {{movie.vote_average}}
+    </div>
+</div>
+{% endfor%}
+</div>
+{% endblock %}
