@@ -2,10 +2,29 @@
 
 {% block content %}
 
+
+<form action="{% url 'search' %}" method="get" class="my-5">
+  <div class="input-group shadow-sm rounded-pill overflow-hidden mx-auto" style="max-width: 600px;">
+    <input
+      type="search"
+      name="q"
+      class="form-control border-0 ps-4 py-3 bg-light"
+      placeholder="Search movies, actors, genres..."
+      value="{{ request.GET.q|default:'' }}"
+      aria-label="Search movies"
+      required
+      autocomplete="off"
+    />
+    <button class="btn btn-primary px-5" type="submit" aria-label="Search">
+      <i class="bi bi-search fs-5"></i>
+    </button>
+  </div>
+</form>
+
 <h1>Popular Movies</h1>
-<div class="row">
+<div class="row p">
 {% for movie in movies %}
-<div class="col-md-3">
+<div class="col-md-2">
     <img src="https://image.tmdb.org/t/p/w500{{movie.poster_path}}" class="card-img-top" alt="{{movie.title}}">
     <div class="card-body">
         <h5>{{ movie.title}}</h5>

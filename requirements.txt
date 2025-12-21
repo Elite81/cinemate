@@ -3,3 +3,5 @@ requests
 python-dotenv
 django-allauth
 Pillow
+django-extensions
+graphviz

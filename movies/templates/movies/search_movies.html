@@ -1,6 +1,19 @@
-{% {% extends "base.html" %}%}
+{% extends "movies/base.html" %}
 
 {% block content %}
 
+<div class="row">
+    <h4>Results of {{}}</h4>
+    
+{% for movie in movies %}
+<div class="col-md-2">
+    <img src="https://image.tmdb.org/t/p/w500{{movie.poster_path}}" class="card-img-top" alt="{{movie.title}}">
+    <div class="card-body">
+        <h5>{{ movie.title}}</h5>
+        <p class="card-text">Ratings: {{movie.vote_average}}
+    </div>
+</div>
+{% endfor%}
+</div>
 
 {% endblock %}

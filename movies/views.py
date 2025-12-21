@@ -11,4 +11,5 @@ def index(request):
 def search(request):
     query = request.GET.get('q', '')
     results = search_movies(query) if query else []
+    print(results)
     return render(request, 'movies/search_movies.html', {'movies':results, 'query':query})

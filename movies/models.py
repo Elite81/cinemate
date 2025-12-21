@@ -13,7 +13,7 @@ class Profile(models.Model):
 
 
 class Movie(models.Model):
-    tmdb_id = models.IntegerField(unique=True)
+    tmdb_id = models.IntegerField(unique=True, primary_key=True)
     title = models.CharField(max_length=255)
     original_title = models.CharField(max_length=255, blank=True, null=True)
     overview = models.TextField(blank=True, null=True)
@@ -34,8 +34,6 @@ class Movie(models.Model):
     def __str__(self):
         return f'{self.movie.title}'
     
-
-
 
 class FavoriteMovie(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
