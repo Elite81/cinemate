@@ -32,6 +32,7 @@
           <p class="card-text">Ratings: {{movie.vote_average}}
       </div>
     </a>
+    <button><a href="{% url 'my_fav_movies' fav_movie=movie.id %}">Add to Favourites</a></button>
 </div>
 {% endfor%}
 </div>

@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from .utils import *
+from .models import *
 
 
 # Create your views here.
@@ -16,8 +17,33 @@ def search(request):
 
 
 def movie_detail(request, movie_id):
-    print(movie_id)
+    
     result = the_movie_detail(movie_id) if movie_id else []
     print(result)
     return render(request, 'movies/movie_detail.html', {'movie':result})
+
+
+def movie_favourite(request, fav_movie):   
+    fav_movie = the_movie_detail(fav_movie) if fav_movie else []
+    movie, created = Movie.objects.get_or_create(
+        tmdb_id=fav_movie['id'],
+         defaults={'title':fav_movie['original_title'],
+                   'overview':fav_movie['overview'],
+                   'poster_path':fav_movie['poster_path'],
+                   'backdrop_path':fav_movie['backdrop_path'],
+                   'release_date':fav_movie['release_date'],
+                   'vote_average':fav_movie['vote_average'],
+                   'vote_count':fav_movie['vote_count'],
+                    'popularity':fav_movie['popularity'],
+                    'original_language':fav_movie['original_language'], 
+             'adult':fav_movie['adult']} )
+    my_fav_movie, created = FavoriteMovie.objects.get_or_create(user=request.user, movie=movie)
     
+    movies= FavoriteMovie.objects.all().order_by('-added_at')
+    all_fav_movie=[]
+    for movie in movies:
+        all_fav_movie.append(movie.movie)
+
+    print(all_fav_movie)
+
+    return render(request, "movies/favourite_movies.html", {'fav_movies':all_fav_movie})

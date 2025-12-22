@@ -1,0 +1,18 @@
+{% extends "movies/base.html" %}
+
+{% block content %}
+
+<div>
+    <h1>My Favourite Movies</h1>
+    {% for movie in fav_movies%}
+    <a href="{% url 'movie_detail' movie_id=movie.tmdb_id %}">
+        <div class="col-lg-2 col-md-3 col-sm-6">
+            <h4>{{movie.title}}</h4>
+            <img src="movie.poster_path" class="card-img-top" alt="{{movie.title}}">
+        </div>
+    </a>
+    {% endfor%}
+</div>
+
+
+{% endblock%}
