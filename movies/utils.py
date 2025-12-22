@@ -20,3 +20,13 @@ def search_movies(query):
     if response.status_code == 200:
         return response.json()['results']
     return []
+
+
+def the_movie_detail(movie_id):
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={settings.TMDB_API_KEY}&query=append_to_response=cretid,videos"
+    response = requests.get(url)
+    if response.status_code == 200:
+        movie = response.json()
+    else:
+        movie="No result matches your query"
+    return movie

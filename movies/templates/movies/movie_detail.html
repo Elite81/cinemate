@@ -1,0 +1,56 @@
+{% extends "movies/base.html" %}
+
+{% block content %}
+
+<div clas="bg-dark text-light">
+    <div class="container my-5">
+
+        <div class="row g-4">
+            <h1>Movie Details</h1>
+            <div class="col-md-4">
+             <img src="https://image.tmdb.org/t/p/w500{{movie.poster_path}}" class="card-img-top" alt="{{movie.title}}">
+        </div>
+
+        <div class="col-md-8">
+            <h2 class="fw-bold">{{movie.belongs_to_collection.name}}</h2>
+            <p class="fst-italic text-warning">{{movie.tagline}}</p>
+            {% comment %} genres {% endcomment %}
+
+            <div class="mb-2">
+                {% for genre in movie.genres %}
+                    <span class="badge bg-secondary">{{genre.name}}</span>
+                {% endfor %}
+            </div>
+
+            <p class="mt-3">{{movie.overview}}</p>
+        
+            <ul class="list-untyled">
+                <li><strong>Runtime: </strong>{{movie.runtime}}</li>
+                <li><strong>Release Date: </strong>{{movie.release_date}}</li>
+                <li><strong>Reating: </strong>{{movie.vote_average}}/ 10 {{movie.vote_count}} votes</li>
+                <li><strong>Language: </strong>
+                    {%for lang in movie.spoken_languages %}
+                        <span class="badge bg-secondary">
+                            {{lang.name}}</span>
+                        {% endfor%}
+                </li>
+
+                <li><strong>Countries: </strong>
+                    {%for countrie in movie.origin_country %}
+                        <span class="badge bg-secondary">
+                            {{countrie}}</span>
+                        {% endfor%}
+                </li>
+            <ul>
+
+            <div class="mt-4">
+                <a href="{{movie.homepage}}" class="btn btn-warning me-2" target="blank">Oficial Website</a>
+                <a href="https://www.imdb.com/title/{{movie.imdb_id}}" class="btn btn-warning me-2" target="blank">IMDb</a>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    
+
+{% endblock%}
