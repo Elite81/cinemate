@@ -73,7 +73,6 @@ class Comment(models.Model):
         return f'{self.user.username} comented on {self.movie.title}'
 
 
-
 class Share(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
@@ -94,3 +93,6 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.name
+
+
+

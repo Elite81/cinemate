@@ -1,5 +1,6 @@
 import requests
 from django.conf import settings
+from .models import *
 
 
 
@@ -30,3 +31,28 @@ def the_movie_detail(movie_id):
     else:
         movie="No result matches your query"
     return movie
+
+
+def get_movie_defaults(tmdb_id):
+    movie = Movie.objects.filter(tmdb_id=tmdb_id)
+    if movie:
+        return movie
+    
+    details = the_movie_detail(tmdb_id)
+    if not details:
+        return None
+    
+    return {
+        "title":details.get("title"),
+        "original_title":details.get("original_title"),
+        "overview":details.get("overview"),
+        "poster_path":details.get("poster_path"),
+        "backdrop_path":details.get(" backdrop_path"),
+        "release_date":details.get("release_date"),
+        "vote_average":details.get("vote_average"),
+        "vote_count":details.get("vote_count"),
+        "popularity":details.get("popularity"),
+        "original_language":details.get("original_language"),
+        "adult":details.get("adult"),
+        "video":details.get("video")
+    }

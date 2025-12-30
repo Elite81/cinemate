@@ -1,6 +1,8 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import Http404
+
 from .utils import *
 from .models import *
 
@@ -18,9 +20,28 @@ def search(request):
     return render(request, 'movies/search_movies.html', {'movies':results, 'query':query})
 
 
-def movie_detail(request, movie_id):
-    result = the_movie_detail(movie_id) if movie_id else []
-    return render(request, 'movies/movie_detail.html', {'movie':result})
+def movie_detail(request, tmdb_id):
+
+    movie = Movie.objects.filter(
+        tmdb_id=tmdb_id,
+    ).first()
+
+    if not movie:
+        defaults = get_movie_defaults(tmdb_id)
+        if not defaults:
+            raise Http404("movie not found")
+        movie = Movie.objects.create(
+            tmdb_id=tmdb_id,
+            **defaults
+        )
+
+    user_rating = None
+    
+    if request.user.is_authenticated:
+        user_rating = Ratings.objects.filter(user=request.user, movie=movie).first()
+    context = {"movie":movie, "user_rating":user_rating, "rating_range":range(10, 0,-1)}
+    
+    return render(request, 'movies/movie_detail.html', context)
 
 
 @login_required
@@ -53,3 +74,47 @@ def movie_favourite(request):
     for movie in movies:
         all_fav_movie.append(movie.movie)
     return render(request, "movies/favourite_movies.html", {'fav_movies':all_fav_movie})
+
+@login_required
+def remove_from_favourite(request):
+    if request.method == 'POST':
+        fav_movie = request.POST.get('movie_id')
+        movie_to_remove=get_object_or_404(FavoriteMovie, user=request.user, movie=fav_movie)
+        movie_title = movie_to_remove.movie.title
+        movie_to_remove.delete()
+        messages.success(request, f"{movie_title} was removed from favourite")
+        return redirect('my_fav_movies')
+
+
+@login_required
+def rate_movie(request, tmdb_id):
+    if request.method != "POST":
+        return redirect("movie_detail", tmdb_id=tmdb_id)
+    
+    score = int(request.POST.get('score', 0))
+    if score < 1 or score > 10:
+        messages.error(request, "score must be betw3een 1 and 10")
+        return redirect("movie_detail", tmdb_id=tmdb_id)
+
+    movie = Movie.objects.filter(tmdb_id=tmdb_id).first()
+
+    if not movie:
+        defaults = get_movie_defaults(tmdb_id)
+        if not defaults:
+            messages.error(request, "Unable to load movie details")
+            return redirect('index')
+
+        movie = Movie.objects.create(
+            tmdb_id=tmdb_id,
+            **defaults
+        )
+    # movie = get_object_or_404(Movie, tmdb_id=tmdb_id)
+        
+    Ratings.objects.update_or_create(
+        user=request.user,
+        movie=movie,
+        defaults={"score":score}
+    )
+    
+    messages.success(request, "Rating saved successfully")
+    return redirect("movie_detail", tmdb_id=movie.tmdb_id)
