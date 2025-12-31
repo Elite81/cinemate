@@ -128,13 +128,19 @@ def comments(request, tmdb_id):
     if request.method == 'POST':
         movie = Movie.objects.filter(tmdb_id=tmdb_id).first()
         if not movie:
-            defaults = get_movie_deraults(tmdb_id)
-            if not defualts:
+            defaults = get_movie_defaults(tmdb_id)
+            if not defaults:
                 raise Http404("Movie not found")
-            movie = Movie.objects.create(tmdb_id=timdb_id, **defaults)
+            movie = Movie.objects.create(tmdb_id=tmdb_id, **defaults)
 
         content = request.POST.get("content", "").strip()
         if content:
             Comment.objects.create(user=request.user, movie=movie, content=content)
         return redirect("movie_detail", tmdb_id=tmdb_id)
     return redirect("movie_detail", tmdb_id=tmdb_id)
+
+
+def genres_movie(request, genre_name):
+    genre = get_object_or_404(Genre, name=genre_name)
+    movies = get_movie_by_genres(genre_id=genre.tmbd_id)
+    return render(request, "movies/home.html", {'movies':movies, "genre_name":genre_name})

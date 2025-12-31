@@ -64,34 +64,20 @@ class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     content = models.TextField()
-    comented_at = models.DateTimeField(auto_now_add=True)
+    commented_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         # unique_together = ('user', 'movie')
         ...
     
     def __str__(self):
-        return f'{self.user.username} comented on {self.movie.title}'
-
-
-class Share(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    plateform = models.CharField(max_length=64)
-    shared_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'movie')
-    
-    def __str__(self):
-        return f'{self.movie.title} shared on {self.plateform}'
+        return f'{self.user.username} commented on {self.movie.title}'
 
 
 class Genre(models.Model):
     tmbd_id = models.IntegerField(unique=True)
     name = models.CharField(max_length=256)
-    movies= models.ManyToManyField(Movie, related_name='genres')
-
+    
     def __str__(self):
         return self.name
 

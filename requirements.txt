@@ -5,3 +5,7 @@ django-allauth
 Pillow
 django-extensions
 graphviz
+gunicorn
+whitenoise
+psycopg2-binary
+dj-database_url

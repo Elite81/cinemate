@@ -56,3 +56,32 @@ def get_movie_defaults(tmdb_id):
         "adult":details.get("adult"),
         "video":details.get("video")
     }
+
+def get_genres():
+    url = f"https://api.themoviedb.org/3/genre/movie/list?api_key={settings.TMDB_API_KEY}&language=en-US"
+    response = requests.get(url)
+    if response.status_code ==200:
+        return response.json().get("genres", [])
+    return []
+
+def sync_genres():
+    for genre in get_genres():
+        print(genre)
+        Genre.objects.update_or_create(tmbd_id=genre['id'], defaults={'name':genre['name']})
+        print("genres Syncronized")
+
+
+def get_movie_by_genres(genre_id, page=1):
+    url = (
+        f"https://api.themoviedb.org/3/discover/movie"
+        f"?api_key={settings.TMDB_API_KEY}"
+        f"&language=en-US"
+        f"&sort_by=popularity.desc"
+        f"&with_genres={genre_id}"
+        f"&page={page}"
+    )
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()['results']
+    return []
+    
