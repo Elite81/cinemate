@@ -39,8 +39,11 @@ def movie_detail(request, tmdb_id):
     
     if request.user.is_authenticated:
         user_rating = Ratings.objects.filter(user=request.user, movie=movie).first()
-    context = {"movie":movie, "user_rating":user_rating, "rating_range":range(10, 0,-1)}
-    
+        comments = Comment.objects.filter(movie=movie).order_by('-comented_at')
+    context = {"movie":movie, "user_rating":user_rating, 
+        "rating_range":range(10, 0,-1),
+        "comments":comments}
+    print(comments)
     return render(request, 'movies/movie_detail.html', context)
 
 
@@ -118,3 +121,20 @@ def rate_movie(request, tmdb_id):
     
     messages.success(request, "Rating saved successfully")
     return redirect("movie_detail", tmdb_id=movie.tmdb_id)
+
+
+
+def comments(request, tmdb_id):
+    if request.method == 'POST':
+        movie = Movie.objects.filter(tmdb_id=tmdb_id).first()
+        if not movie:
+            defaults = get_movie_deraults(tmdb_id)
+            if not defualts:
+                raise Http404("Movie not found")
+            movie = Movie.objects.create(tmdb_id=timdb_id, **defaults)
+
+        content = request.POST.get("content", "").strip()
+        if content:
+            Comment.objects.create(user=request.user, movie=movie, content=content)
+        return redirect("movie_detail", tmdb_id=tmdb_id)
+    return redirect("movie_detail", tmdb_id=tmdb_id)

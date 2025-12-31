@@ -91,9 +91,41 @@
                         <a href="https://www.imdb.com/title/{{ movie.imdb_id }}" class="btn btn-warning me-2" target="_blank">IMDb</a>
                     {% endif %}
                 </div>
+                <div>
+                
+                
             </div>
+            </div>
+
+            
         </div>
 
     </div>
+
+    <form method="POST" action="{% url 'add_comment' tmdb_id=movie.tmdb_id%}" class="mb-6 px-2 mx-2">
+        {% csrf_token %}
+        
+        <div class="input-group">
+            <input type="text"  required value="" name="content" class="form-control" placeholder="Your comment here">
+            <button type="submit" class="btn btn-primary">Post Comment</button>
+        </div>
+
+    </form>
+    <div class="mb-4">
+        <h3 class="h5 fw=bold mb-3">Comments</h3>
+            <div class="list-group">
+                {% for comment in comments %}
+                <div class="list=group-item mb-2 rounded shadow-sm"> 
+                    <p class="fw-semiblold mb-1">{{comment.user.username}}</p>
+                    <p class="mb-1">{{comment.content}}</p>
+                    <p class="text-muted">{{comment.user.comented_at|date:"M d, Y H:i"}}</p>
+                <div>
+            </div>
+        {% empty %}
+        <p>No comment yet</p>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
+
+

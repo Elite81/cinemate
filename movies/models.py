@@ -67,7 +67,8 @@ class Comment(models.Model):
     comented_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'movie')
+        # unique_together = ('user', 'movie')
+        ...
     
     def __str__(self):
         return f'{self.user.username} comented on {self.movie.title}'
