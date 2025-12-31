@@ -10,7 +10,8 @@ from .models import *
 # Create your views here.
 def index(request):
     movies = get_popular_movies()
-    return render(request, "movies/home.html", {'movies':movies})
+    genre_name="Populare Movies"
+    return render(request, "movies/home.html", {'movies':movies, 'genre_name':genre_name})
 
 
 def search(request):
@@ -146,4 +147,5 @@ def comments(request, tmdb_id):
 def genres_movie(request, genre_name):
     genre = get_object_or_404(Genre, name=genre_name)
     movies = get_movie_by_genres(genre_id=genre.tmbd_id)
+    
     return render(request, "movies/home.html", {'movies':movies, "genre_name":genre_name})

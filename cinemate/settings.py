@@ -19,9 +19,9 @@ load_dotenv()
 
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
-DEBUG = os.getenv('DEBUG' 'Fasle') == 'True'
+# DEBUG = os.getenv('DEBUG' 'Fasle') == 'True'
 
-
+DEBUG = True
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -167,3 +167,4 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 LOGIN_REDIRECT_URL = '/'
 
 SECRET_KEY
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
