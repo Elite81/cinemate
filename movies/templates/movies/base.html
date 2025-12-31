@@ -49,17 +49,17 @@
 
     {% if user.is_authenticated %}
         <li class="nav-item">
-            <form method="post" action="{ url 'accounts' %}">
+            <form method="post" action="{% url 'account_logout' %}">
                 {% csrf_token %}
                 <button type="submit" class="nav-link btn btn-link p-0" >Logout</button>
             </form>
         </li>
     {% else %}
         <li class="nav-item">
-          <a class="nav-link" href="account_login">Login</a>
+          <a class="nav-link" href="{% url 'account_login' %}">Login</a>
         </li>
           <li class="nav-item">
-          <a class="nav-link" href="{% url 'account_signup'%}">SignUp</a>
+          <a class="nav-link" href="{% url 'account_signup' %}">SignUp</a>
         </li>
     {% endif %}
       </ul>
@@ -83,7 +83,7 @@
 </body>
 </html>
 
-{% block footer%}
+{% block footer %}
 <footer class="py-3 my-4">
   <ul class="nav justify-content-center border-bottom pb-3 mb-3">
     <li class="nav-item"><a href="/" class="nav-link px-2 text-body-secondary">Home</a></li>

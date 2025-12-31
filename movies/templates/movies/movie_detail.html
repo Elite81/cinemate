@@ -75,18 +75,24 @@
                             <div class="rating">
                                 {% for i in rating_range %}
                                     <input type="radio" name="score" value="{{ i }}" id="star{{ i }}"
-                                    {% if user_rating and user_rating.score == i %}checked{% endif %}>
+                                    {% if user_rating %}
+                                        {% if user_rating.score == i %}checked{% endif %}>
+                                    {% endif %}
                                     <label for="star{{ i }}">★</label>
                                 {% endfor %}
+                               
                             </div>
+                             <input type="hidden" name="rating_id" value="{{ user_rating.id|default:''}}">
                             <button type="submit" class="btn btn-primary mt-2">Submit Rating</button>
                         </form>
                     </li>
                     {% else %}
+                    
                         <li class="mt-3">
-                            <p><a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Log in</a> to rate this movie.</p>
+                            <p><a href="{% url 'account_login' %}" class="btn btn-outline-light btn-sm">Log in</a> to rate this movie.</p>
                         </li>
                     {% endif %}
+
 
                     <li>
                         <strong>Languages:</strong>

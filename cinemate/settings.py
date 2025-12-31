@@ -21,6 +21,7 @@ TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv('DEBUG' 'Fasle') == 'True'
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -93,7 +94,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
 
                 'django.template.context_processors.request',
-                'context_processor.movie_genres'
+                'context_processor.movie_genres',
             ],
         },
     },

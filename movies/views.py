@@ -16,16 +16,14 @@ def index(request):
 def search(request):
     query = request.GET.get('q', '')
     results = search_movies(query) if query else []
-    print(results[0])
     return render(request, 'movies/search_movies.html', {'movies':results, 'query':query})
 
 
 def movie_detail(request, tmdb_id):
-
     movie = Movie.objects.filter(
         tmdb_id=tmdb_id,
     ).first()
-
+    
     if not movie:
         defaults = get_movie_defaults(tmdb_id)
         if not defaults:
@@ -39,11 +37,16 @@ def movie_detail(request, tmdb_id):
     
     if request.user.is_authenticated:
         user_rating = Ratings.objects.filter(user=request.user, movie=movie).first()
-        comments = Comment.objects.filter(movie=movie).order_by('-comented_at')
-    context = {"movie":movie, "user_rating":user_rating, 
+    
+    comments = Comment.objects.filter(movie=movie).order_by('-commented_at')
+    
+    context = {
+        "movie":movie,
+        "user_rating":user_rating, 
         "rating_range":range(10, 0,-1),
-        "comments":comments}
-    print(comments)
+        "comments":comments
+        }
+    
     return render(request, 'movies/movie_detail.html', context)
 
 

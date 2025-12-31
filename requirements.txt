@@ -7,5 +7,5 @@ django-extensions
 graphviz
 gunicorn
 whitenoise
-psycopg[binary] --upgrade 
+psycopg[binary] 
 dj-database_url
