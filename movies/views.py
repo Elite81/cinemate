@@ -11,7 +11,7 @@ from .models import *
 # Create your views here.
 def index(request):
     movies = get_popular_movies()
-    genre_name="Populare Movies"
+    genre_name="Popular Movies"
     return render(request, "movies/home.html", {'movies':movies, 'genre_name':genre_name})
 
 
@@ -22,7 +22,7 @@ def search(request):
     return render(request, 'movies/search_movies.html', {'movies':results, 'query':query})
 
 
-def movie_detail(request, tmdb_id):
+def movie_details(request, tmdb_id):
     movie = Movie.objects.filter(
         tmdb_id=tmdb_id,
     ).first()
@@ -50,7 +50,7 @@ def movie_detail(request, tmdb_id):
         user_rating = Ratings.objects.filter(user=request.user, movie=movie).first()
     
     comments = Comment.objects.filter(movie=movie).order_by('-commented_at')
-    print(movie.spoken_languages)
+   
     context = {
         "movie":movie,
         "user_rating":user_rating, 
@@ -62,7 +62,7 @@ def movie_detail(request, tmdb_id):
 
 
 @login_required
-def movie_favourite(request):
+def movie_favourites(request):
     if request.method == 'POST':
         fav_movie = request.POST['movie_id']   
         fav_movie = the_movie_detail(fav_movie) if fav_movie else []
@@ -110,7 +110,7 @@ def movie_favourite(request):
 
 
 @login_required
-def remove_from_favourite(request):
+def remove_from_favourites(request):
     if request.method == 'POST':
         fav_movie = request.POST.get('movie_id')
         movie_to_remove=get_object_or_404(FavoriteMovie, user=request.user, movie=fav_movie)
