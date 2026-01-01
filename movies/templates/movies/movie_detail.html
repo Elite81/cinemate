@@ -74,10 +74,12 @@
                             <label class="form-label d-block">Rate this movie</label>
                             <div class="rating">
                                 {% for i in rating_range %}
-                                    <input type="radio" name="score" value="{{ i }}" id="star{{ i }}"
+                                    <input type="radio"
+                                    name="score" value="{{ i }}"
+                                    id="star{{ i }}"
                                     {% if user_rating %}
-                                        {% if user_rating.score == i %}checked{% endif %}>
-                                    {% endif %}
+                                        {% if user_rating.score == i %}checked{% endif %}
+                                    {% endif %}>
                                     <label for="star{{ i }}">★</label>
                                 {% endfor %}
                                

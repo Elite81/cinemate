@@ -39,8 +39,6 @@ def get_movie_defaults(tmdb_id):
         return movie
     
     details = the_movie_detail(tmdb_id)
-    print(details.keys())
-    print(details)
     if not details:
         return None
     
