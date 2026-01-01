@@ -80,7 +80,7 @@ def movie_favourites(request):
                     'adult':fav_movie['adult'],
                     'video':fav_movie['video'],
                     'origin_country':fav_movie['origin_country'],
-                    'spoken_language':fav_movie.get('spoken_languages', []),
+                    'spoken_languages':fav_movie.get('spoken_languages', []),
                     'homepage':fav_movie['homepage'],
                     'runtime':fav_movie['runtime']
                     } )
