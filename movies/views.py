@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
+from django.forms.models import model_to_dict
 
 from .utils import *
 from .models import *
@@ -17,6 +18,7 @@ def index(request):
 def search(request):
     query = request.GET.get('q', '')
     results = search_movies(query) if query else []
+    
     return render(request, 'movies/search_movies.html', {'movies':results, 'query':query})
 
 
@@ -27,20 +29,28 @@ def movie_detail(request, tmdb_id):
     
     if not movie:
         defaults = get_movie_defaults(tmdb_id)
+        
         if not defaults:
             raise Http404("movie not found")
         movie = Movie.objects.create(
             tmdb_id=tmdb_id,
-            **defaults
+            **{k: v for k, v in defaults.items() if k != 'genres'}
         )
 
+        for genre in defaults['genres']:
+            genre_name=genre['name']
+            tmbd_id=genre['id']
+            genre_instance, _ = Genre.objects.get_or_create(name=genre_name, tmbd_id=tmbd_id) 
+            movie.genres.add(genre_instance)
+
+    
     user_rating = None
     
     if request.user.is_authenticated:
         user_rating = Ratings.objects.filter(user=request.user, movie=movie).first()
     
     comments = Comment.objects.filter(movie=movie).order_by('-commented_at')
-    
+    print(movie.spoken_languages)
     context = {
         "movie":movie,
         "user_rating":user_rating, 
@@ -65,9 +75,24 @@ def movie_favourite(request):
                     'release_date':fav_movie['release_date'],
                     'vote_average':fav_movie['vote_average'],
                     'vote_count':fav_movie['vote_count'],
-                        'popularity':fav_movie['popularity'],
-                        'original_language':fav_movie['original_language'], 
-                'adult':fav_movie['adult']} )
+                    'popularity':fav_movie['popularity'],
+                    'original_language':fav_movie['original_language'], 
+                    'adult':fav_movie['adult'],
+                    'video':fav_movie['video'],
+                    'origin_country':fav_movie['origin_country'],
+                    'spoken_language':fav_movie.get('spoken_languages', []),
+                    'homepage':fav_movie['homepage'],
+                    'runtime':fav_movie['runtime']
+                    } )
+            
+
+        for genre in fav_movie['genres']:
+            genre_name=genre['name']
+            tmbd_id=genre['id']
+            genre_instance, _ = Genre.objects.get_or_create(name=genre_name, tmbd_id=tmbd_id) 
+            movie.genres.add(genre_instance)
+                    
+        
         my_fav_movie, created = FavoriteMovie.objects.get_or_create(user=request.user, movie=movie)
         if created:
             messages.success(request, f"{my_fav_movie.movie.title} added to favourites")
@@ -81,6 +106,8 @@ def movie_favourite(request):
     for movie in movies:
         all_fav_movie.append(movie.movie)
     return render(request, "movies/favourite_movies.html", {'fav_movies':all_fav_movie})
+
+
 
 @login_required
 def remove_from_favourite(request):
@@ -113,8 +140,15 @@ def rate_movie(request, tmdb_id):
 
         movie = Movie.objects.create(
             tmdb_id=tmdb_id,
-            **defaults
+            **{k: v for k, v in defaults.items() if k != 'genres'}
         )
+
+        for genre in defaults['genres']:
+            genre_name=genre['name']
+            tmbd_id=genre['id']
+            genre_instance, _ = Genre.objects.get_or_create(name=genre_name, tmbd_id=tmbd_id) 
+            movie.genres.add(genre_instance)
+
     # movie = get_object_or_404(Movie, tmdb_id=tmdb_id)
         
     Ratings.objects.update_or_create(

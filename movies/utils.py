@@ -39,6 +39,8 @@ def get_movie_defaults(tmdb_id):
         return movie
     
     details = the_movie_detail(tmdb_id)
+    print(details.keys())
+    print(details)
     if not details:
         return None
     
@@ -54,7 +56,12 @@ def get_movie_defaults(tmdb_id):
         "popularity":details.get("popularity"),
         "original_language":details.get("original_language"),
         "adult":details.get("adult"),
-        "video":details.get("video")
+        "video":details.get("video"),
+        "genres":details.get("genres"),
+        "origin_country":details.get("origin_country"),
+        "spoken_languages":details.get("spoken_languages"),
+        "homepage":details.get("homepage"),
+        "runtime":details.get("runtime")
     }
 
 def get_genres():

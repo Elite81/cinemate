@@ -26,7 +26,11 @@ class Movie(models.Model):
     original_language = models.CharField(max_length=10, blank=True, null=True)
     adult = models.BooleanField(default=False)
     video = models.BooleanField(default=False)
-
+    runtime=models.CharField(max_length=4, blank=True, null=True)
+    genres = models.ManyToManyField("Genre")
+    origin_country = models.CharField(max_length=10, blank=True, null=True)
+    spoken_languages= models.JSONField(blank=True, null=True)
+    homepage= models.URLField(blank=True, null=True)
 
     def get_absolute_url(self):
         return reverse("movie_detail", args=[str(self.id)])

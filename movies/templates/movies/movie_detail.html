@@ -96,16 +96,16 @@
 
                     <li>
                         <strong>Languages:</strong>
-                        {% for lang in movie.spoken_languages.all %}
-                            <span class="badge bg-secondary me-1">{{ lang.name }}</span>
+                        {% for lang in movie.spoken_languages %}
+                            <span class="badge bg-secondary me-1">{{ lang.english_name }}</span>
                         {% endfor %}
                     </li>
 
                     <li>
                         <strong>Countries:</strong>
-                        {% for country in movie.origin_country.all %}
-                            <span class="badge bg-secondary me-1">{{ country }}</span>
-                        {% endfor %}
+                        {% comment %} {% for country in movie.origin_country.all %} {% endcomment %}
+                            <span class="badge bg-secondary me-1">{{ movie.origin_country }}</span>
+                        {% comment %} {% endfor %} {% endcomment %}
                     </li>
                 </ul>
 

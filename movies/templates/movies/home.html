@@ -3,7 +3,8 @@
 {% block content %}
 
 
-<form action="{% url 'search' %}" method="POST" class="my-5">
+<form action="{% url 'search' %}" method="GET" class="my-5">
+
   <div class="input-group shadow-sm rounded-pill overflow-hidden mx-auto" style="max-width: 600px;">
     <input
       type="search"
