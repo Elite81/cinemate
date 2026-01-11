@@ -1,5 +1,7 @@
 
 # cinemate
+### Video Demo:  <https://www.youtube.com/watch?v=q1LUCQi6iVc>
+### Live Demo:   <https://cinemate-6cht.onrender.com/>
 
 
 ## Project Overview
@@ -34,6 +36,8 @@ Cinemate is a full-stack movie web application developed for my CS50x Final Proj
 
     ### Database
     - PostgreSQL (hosted on Neon)
+    -  Database design is documented in the [ERD on GitHub Gist](https://gist.github.com/Elite81/ee559d93b68a536b0d4e965302168030#file-ciname_erd-svg)
+
 
     ### API
     - The Movie Database (TMDB) API
@@ -74,10 +78,10 @@ Cinemate is a full-stack movie web application developed for my CS50x Final Proj
     ### Instalation Steps
 
     1. Clone the repository:
-    git clone https://github.com/elite81/cinemate.git
-    cd cinemate
+        git clone https://github.com/elite81/cinemate.git
+        cd cinemate
 
-    2. Create and activate a virtual environment:
+    2. Create and activate a virtua             l environment:
         python -m venv venv
         source venv/bin/activate  # On Windows: venv\\Scripts\\activate
 

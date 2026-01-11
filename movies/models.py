@@ -86,4 +86,14 @@ class Genre(models.Model):
         return self.name
 
 
+class Like(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Likes")
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name="Likes")
+    is_like = models.BooleanField(default=False)
+    added_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('user', 'movie')
+
+    def __str__(self):
+        return f"{self.user.username} {'likes' if self.is_like else 'dislikes'} {self.movie.title}"
