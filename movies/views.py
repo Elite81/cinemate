@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.forms.models import model_to_dict
+from django.db import transaction
+from django.http import JsonResponse
 
 from .utils import *
 from .models import *
@@ -50,12 +52,15 @@ def movie_details(request, tmdb_id):
         user_rating = Ratings.objects.filter(user=request.user, movie=movie).first()
     
     comments = Comment.objects.filter(movie=movie).order_by('-commented_at')
+    like = Like.objects.filter(movie=movie, is_like=True).first()
+    # print(like.count_like)
    
     context = {
         "movie":movie,
         "user_rating":user_rating, 
         "rating_range":range(10, 0,-1),
-        "comments":comments
+        "comments":comments,
+        "like":like
         }
     
     return render(request, 'movies/movie_detail.html', context)
@@ -183,3 +188,40 @@ def genres_movie(request, genre_name):
     movies = get_movie_by_genres(genre_id=genre.tmbd_id)
     
     return render(request, "movies/home.html", {'movies':movies, "genre_name":genre_name})
+
+@login_required
+@transaction.atomic
+def toggle_like(request, tmdb_id):
+    if request.method != 'POST':
+        return JsonResponse({'error':'Invalid request'}, status=400)
+    user = request.user
+    movie = Movie.objects.select_for_update().get(tmdb_id=tmdb_id)
+    # movie = get_object_or_404(Movie, tmdb_id=tmdb_id)
+    like_obj, created = Like.objects.get_or_create(user=user, movie=movie, defaults={'is_like':True})
+    
+    if not created:
+        if like_obj.is_like:
+            like_obj.is_like = False
+            movie.count_like = max(0, movie.count_like -1)
+        else:
+            like_obj.is_like = True
+            movie.count_like += 1
+        
+        like_obj.save()
+        movie.save()
+
+    else:
+        movie.count_like += 1
+        movie.save()
+    
+    return redirect('movie_detail', tmdb_id=tmdb_id)
+
+
+@login_required
+def liked_movies(request):
+    all_liked_movies = Like.objects.filter(user=request.user, is_like=True)
+    context = {'movies':all_liked_movies}
+    return render(request, 'movies/liked_movies.html', context)
+         
+
+         
