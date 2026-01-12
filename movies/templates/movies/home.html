@@ -1,8 +1,7 @@
 {% extends "movies/base.html" %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-
-
 <form action="{% url 'search' %}" method="GET" class="my-5">
 
   <div class="input-group shadow-sm rounded-pill overflow-hidden mx-auto" style="max-width: 600px;">
