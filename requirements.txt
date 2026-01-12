@@ -5,7 +5,7 @@ django-allauth
 Pillow
 django-extensions
 graphviz
-pygraphviz
+# pygraphviz
 gunicorn
 whitenoise
 psycopg[binary] 
