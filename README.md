@@ -81,7 +81,7 @@ Cinemate is a full-stack movie web application developed for my CS50x Final Proj
         git clone https://github.com/elite81/cinemate.git
         cd cinemate
 
-    2. Create and activate a virtua             l environment:
+    2. Create and activate a virtual environment:
         python -m venv venv
         source venv/bin/activate  # On Windows: venv\\Scripts\\activate
 
@@ -98,10 +98,14 @@ Cinemate is a full-stack movie web application developed for my CS50x Final Proj
         python manage.py makemigrations
         python manage.py migrate
 
+
     7. Start the development server:
         python manage.py runserver
 
-    8. Open your browser and visit:
+    8. Run the command below to fetch available genres from TMDB:
+        python manage.py sync_genres
+
+    9. Open your browser and visit:
         http://127.0.0.1:8000/
 
 

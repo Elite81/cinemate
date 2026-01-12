@@ -3,9 +3,11 @@ from django.conf import settings
 from .models import *
 
 
+''' 
+ Note: Logic and explanations in this file were refined with assistance from ChatGPT (OpenAI).
+'''
 
 
-# Generated from chatGPT
 # Fetch popular movies
 def get_popular_movies(page=1):
     url = f"https://api.themoviedb.org/3/movie/popular?api_key={settings.TMDB_API_KEY}&language=en-US&page={page}"
