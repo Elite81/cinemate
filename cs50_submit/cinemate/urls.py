@@ -24,6 +24,4 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('', include('movies.urls')),
-    path('silk/', include('silk.urls', namespace='silk')),
-    path('prometheus/', include('django_prometheus.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

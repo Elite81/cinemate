@@ -1,0 +1,23 @@
+/* from chatGPT */
+
+.rating {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  font-size: 2rem;
+}
+
+.rating input {
+  display: none;
+}
+
+.rating label {
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.rating input:checked ~ label,
+.rating label:hover,
+.rating label:hover ~ label {
+  color: #f5c518; /* TMDB gold */
+}

@@ -1,0 +1,49 @@
+{% extends "movies/base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<form action="{% url 'search' %}" method="GET" class="my-5">
+
+  <div class="input-group shadow-sm rounded-pill overflow-hidden mx-auto" style="max-width: 600px;">
+    <input
+      type="search"
+      name="q"
+      class="form-control border-0 ps-4 py-3 bg-light"
+      placeholder="Search movies, actors, genres..."
+      value="{{ request.GET.q|default:'' }}"
+      aria-label="Search movies"
+      required
+      autocomplete="off"
+    />
+    <button class="btn btn-primary px-5" type="submit" aria-label="Search">
+      <i class="bi bi-search fs-5"></i>
+    </button>
+  </div>
+</form>
+
+<h1>{{genre_name}}</h1>
+<div class="row p">
+{% for movie in movies %}
+
+<div class="col-lg-2 col-md-3 col-sm-6">
+    <a href="{% url 'movie_detail' tmdb_id=movie.id %}">
+      <img src="https://image.tmdb.org/t/p/w500{{movie.poster_path}}" class="card-img-top" alt="{{movie.title}}">
+      <div class="card-body">
+          <h5>{{ movie.title}}</h5>
+          <p class="card-text">Ratings: {{movie.vote_average}}
+      </div>
+    </a>
+    <form action="{% url 'my_fav_movies'%}" method="POST">
+      {% csrf_token %}
+      <div> 
+        <input type="hidden" id="title" name="movie_id" value="{{movie.id}}" />
+        <input type="submit" value="Add to favorite"/>
+      </div>
+    </form>
+</div> 
+
+    {% comment %} <button><a href="{% url 'my_fav_movies' fav_movie=movie.id %}">Add to Favourites</a></button> {% endcomment %}
+
+{% endfor%}
+</div>
+{% endblock %}

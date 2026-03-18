@@ -11,16 +11,14 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
-
+from dotenv import load_dotenv
 import dj_database_url
 import os
-from dotenv import load_dotenv
+
 load_dotenv()
-from celery import Celery
 
-SECRET_KEY = os.getenv("SECRET_KEY")
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
-
+SECRET_KEY = os.getenv("SECRET_KEY")
 # DEBUG = os.getenv('DEBUG' 'Fasle') == 'True'
 
 DEBUG = True
@@ -38,7 +36,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
 DATABASE_URL = os.getenv("DATABASE_URL")
-app = Celery('cinemate')
 
 # Application definition
 
@@ -52,15 +49,11 @@ INSTALLED_APPS = [
     'movies',
     'allauth',
     'allauth.account',
-    # 'django_extensions',
-    'silk',
-    'django_prometheus',
-    'django_celery_results',
-
+    'django_extensions'
+    
 ]
 
 MIDDLEWARE = [
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     "django.middleware.security.SecurityMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -71,8 +64,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
     "allauth.account.middleware.AccountMiddleware",
-    "silk.middleware.SilkyMiddleware",
-    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 
@@ -104,7 +95,6 @@ TEMPLATES = [
 
                 'django.template.context_processors.request',
                 'context_processor.movie_genres',
-                
             ],
         },
     },
@@ -117,7 +107,7 @@ WSGI_APPLICATION = "cinemate.wsgi.application"
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 if DATABASE_URL:
-    
+
     DATABASES = {
         "default":dj_database_url.parse(
             DATABASE_URL,
@@ -178,44 +168,3 @@ LOGIN_REDIRECT_URL = '/'
 
 SECRET_KEY
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cinemate.settings')
-app.config_from_object('django.conf:settings', namespace='CELERY')
-
-app.autodiscover_tasks()
-
-# Celery Configuration Options
-CELERY_TIMEZONE = "Australia/Tasmania"
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60
-
-CELERY_RESULT_BACKEND = 'django-cache'
-
-# pick which cache from the CACHES setting.
-CELERY_CACHE_BACKEND = 'default'
-
-# django setting.
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'my_cache_table',
-    }
-}
-
-# # CELERY CONFIGURATION
-
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
-
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-
-CELERY_TIMEZONE = 'UTC'
-
-
-
-INSTALLED_APPS += ['django_celery_beat']
-
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'

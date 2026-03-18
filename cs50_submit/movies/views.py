@@ -120,15 +120,10 @@ def movie_favorites(request):
         return redirect("my_fav_movies")
     
     # Getting all the user favorite movies from the database
-    # movies= FavoriteMovie.objects.filter(user=request.user).order_by('-added_at')
+    movies= FavoriteMovie.objects.filter(user=request.user).order_by('-added_at')
     all_fav_movie=[]
-    # for movie in movies:
-    #     all_fav_movie.append(movie.movie)
-    
-    favorites = FavoriteMovie.objects.filter(user=request.user).select_related('movie').order_by('-added_at')
-    for fav in favorites:
-        all_fav_movie.append(fav.movie)
-
+    for movie in movies:
+        all_fav_movie.append(movie.movie)
     return render(request, "movies/favorite_movies.html", {'fav_movies':all_fav_movie})
 
 

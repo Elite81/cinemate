@@ -1,0 +1,38 @@
+{% extends "movies/base.html" %}
+{% block title %}Favorite Movie{% endblock %}
+
+{% block content %}
+
+<div>
+    <h1>My Favorite Movies</h1>
+    <div class="container">
+        <div class="row g-4">
+            {% for movie in fav_movies%}
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <div class="card h-100">
+                    <a href="{% url 'movie_detail' tmdb_id=movie.tmdb_id %}"/>
+                        <img src="https://image.tmdb.org/t/p/w500{{movie.poster_path}}"
+                        class="card-img-top"
+                        alt="{{movie.title}}">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">{{movie.title}}</h5>
+                        </div>
+                    </a>
+                <form action="{% url 'rm_from_favorite' %}" method="POST">
+                    {% csrf_token %}
+      <div> 
+        <input type="hidden" id="title" name="movie_id" value="{{movie.id}}" />
+        <input type="submit" value="Remove from favorite"/>
+      </div>
+
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+   
+        </div>
+
+</div>
+
+
+{% endblock%}
