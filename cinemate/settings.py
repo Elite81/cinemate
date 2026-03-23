@@ -211,23 +211,61 @@ CELERY_CACHE_BACKEND = 'default'
 REDIS_URL = os.getenv('REDIS_URL')
 
 # 2. Plug it into the Django Cache System
+import ssl # You need this for the constant
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": REDIS_URL,
+        "LOCATION": os.environ.get("REDIS_URL"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "CONNECTION_POOL_KWARGS": {
-                "ssl_cert_reqs": None # Required for Upstash SSL
+                "ssl_cert_reqs": ssl.CERT_NONE, # Fixes the parameter error
             }
         }
     }
 }
+
+# 3. Update Celery (This is what is currently missing/wrong)
+# settings.py
+
+# This tells Celery how to handle the rediss:// connection
+CELERY_BROKER_USE_SSL = {
+    'ssl_cert_reqs': ssl.CERT_NONE
+}
+
+CELERY_REDIS_BACKEND_USE_SSL = {
+    'ssl_cert_reqs': ssl.CERT_NONE
+}
+
+
+
+
+
+CELERY_BROKER_USE_SSL = {
+    'ssl_cert_reqs': ssl.CERT_NONE
+}
+
+CELERY_REDIS_BACKEND_USE_SSL = {
+    'ssl_cert_reqs': ssl.CERT_NONE
+}
+# Ensure these point to your Env Var
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+
+# # Upstash REQUIRES these for Celery to connect over SSL
+# CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": None}
+# CELERY_REDIS_BACKEND_USE_SSL = {"ssl_cert_reqs": None}
+
+
 # # CELERY CONFIGURATION
 
 RATELIMIT_ENABLE = False
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+
+# CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
