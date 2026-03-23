@@ -183,13 +183,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cinemate.settings')
 app.config_from_object('django.conf:settings', namespace='CELERY')
-import redis
-
-r = redis.Redis.from_url("rediss://default:********@lucky-cub-39565.upstash.io:6379")
-
-r.set('foo', 'bar')
-value = r.get('foo')
-
 app.autodiscover_tasks()
 
 # Celery Configuration Options
