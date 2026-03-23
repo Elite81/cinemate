@@ -183,6 +183,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cinemate.settings')
 app.config_from_object('django.conf:settings', namespace='CELERY')
+import redis
+
+r = redis.Redis.from_url("rediss://default:********@lucky-cub-39565.upstash.io:6379")
+
+r.set('foo', 'bar')
+value = r.get('foo')
 
 app.autodiscover_tasks()
 
@@ -196,17 +202,34 @@ CELERY_RESULT_BACKEND = 'django-cache'
 # pick which cache from the CACHES setting.
 CELERY_CACHE_BACKEND = 'default'
 
-# django setting.
+# # django setting.
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379/1",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         }
+#     }
+# }
+
+
+# 1. Pull the full string from the environment
+REDIS_URL = os.getenv('REDIS_URL')
+
+# 2. Plug it into the Django Cache System
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": REDIS_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "ssl_cert_reqs": None # Required for Upstash SSL
+            }
         }
     }
 }
-
 # # CELERY CONFIGURATION
 
 RATELIMIT_ENABLE = False
