@@ -33,11 +33,14 @@ class Movie(models.Model):
     spoken_languages= models.JSONField(blank=True, null=True)
     homepage= models.URLField(blank=True, null=True)
 
+    
+
     def get_absolute_url(self):
         return reverse("movie_detail", args=[str(self.id)])
     
     def __str__(self):
         return f'{self.title}'
+
     
 
 class FavoriteMovie(models.Model):
@@ -95,6 +98,9 @@ class Like(models.Model):
 
     class Meta:
         unique_together = ('user', 'movie')
+        indexes = [
+            models.Index(fields=['movie', 'is_like']),
+        ]
 
     def __str__(self):
         return f"{self.user.username} {'likes' if self.is_like else 'dislikes'} {self.movie.title}"

@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     # 'django_extensions',
-    'silk',
+    # 'silk',
     'django_prometheus',
     'django_celery_results',
 
@@ -69,9 +69,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'movies.middleware.RequestTimingMiddleware',
 
     "allauth.account.middleware.AccountMiddleware",
-    "silk.middleware.SilkyMiddleware",
+    # "silk.middleware.SilkyMiddleware",
     'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
@@ -197,14 +198,18 @@ CELERY_CACHE_BACKEND = 'default'
 
 # django setting.
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'my_cache_table',
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
 
 # # CELERY CONFIGURATION
 
+RATELIMIT_ENABLE = False
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
 CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
 
@@ -219,3 +224,29 @@ CELERY_TIMEZONE = 'UTC'
 INSTALLED_APPS += ['django_celery_beat']
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# settings.py
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# SILKY_PYTHON_PROFILER = False
+# SILKY_INTERCEPT_PERCENT = 0
+
+
+
+# Only trigger this when you explicitly start the test
+if os.environ.get('K6_RUNNING') == 'true':
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+
+
+# settings.py
+AXES_ENABLED = False  # Temporarily disable lockout for the duration of the test

@@ -5,74 +5,103 @@ from django.http import Http404
 from django.forms.models import model_to_dict
 from django.db import transaction
 from django.http import JsonResponse
-
+from django.core.cache import cache
+from .tasks import * 
+from .timer import *
+from django.http import HttpResponse
 from .utils import *
 from .models import *
-
+from django.views.decorators.cache import cache_page
 
 # Create your views here.
+# @measure_time('Index View')  # Example usage of the timer decorator
+# def index(request):
+#     cache_key = 'popular_movies_list'
+#     movies = cache.get(cache_key)
+    
+#     if movies is None:
+#         # Trigger the task to run in the background
+#         update_popular_movies_cache.delay()
+#         # Return empty list so the page loads instantly while the task runs
+#         movies = [] 
+        
+#     context = {
+#         'movies': movies, 
+#         'genre_name': "Popular Movies"
+#     }
+#     return render(request, "movies/home.html", context)
+    # return HttpResponse("<html><body>Quick Test</body></html>")
+
+@measure_time('Index View')
 def index(request):
-    # getting popular movie
-    movies = get_popular_movies()
-    genre_name="Popular Movies"
-    return render(request, "movies/home.html", {'movies':movies, 'genre_name':genre_name})
+    # Only hit local Redis
+    movies = cache.get('popular_movies_list')
+    
+    # If cache is empty, just return [] and let the worker fix it later
+    if movies is None:
+        update_popular_movies_cache.delay()
+        movies = []
+    
+    return render(request, "movies/home.html", {
+        'movies': movies, 
+        'genre_name': "Popular Movies"
+    })
 
 # searching with keyword
+@measure_time('Search: ')
 def search(request):
-    query = request.GET.get('q', '')
-    results = search_movies(query) if query else []
-    
-    return render(request, 'movies/search_movies.html', {'movies':results, 'query':query})
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return render(request, 'movies/search_movies.html', {'movies': [], 'query': query})
 
+    cache_key = f'search_{query.replace(" ", "_")}'
+    results = cache.get(cache_key)
 
+    if results is None:
+        results = search_movies(query)
+        cache.set(cache_key, results, 600) # Cache search for 10 mins
 
+    return render(request, 'movies/search_movies.html', {'movies': results, 'query': query})
+
+@measure_time('Movie Details')
 def movie_details(request, tmdb_id):
-    # selecting the movie from the database
-    movie = Movie.objects.filter(
-        tmdb_id=tmdb_id,
-    ).first()
-    
-    # if the movie is not available in the database we create it.
-    if not movie:
-        defaults = get_movie_defaults(tmdb_id)
+    movie_cache_key = f'movie_data_{tmdb_id}'
+    movie = cache.get(movie_cache_key)
+
+    # 1. Handle Movie Data Cache
+    if movie == "NOT_FOUND":
+        raise Http404("Movie not found")
         
-        if not defaults:
-            raise Http404("movie not found")
-        movie = Movie.objects.create(
-            tmdb_id=tmdb_id,
-            **{k: v for k, v in defaults.items() if k != 'genres'}
-        )
+    if movie is None:
+        # DB Lookup
+        movie_obj = Movie.objects.filter(tmdb_id=tmdb_id).first()
+        if not movie_obj:
+            cache.set(movie_cache_key, "NOT_FOUND", 3600) # Cache the 404
+            raise Http404("Movie not found")
 
-        # selecting the movie genre 
-        for genre in defaults['genres']:
-            genre_name=genre['name']
-            tmbd_id=genre['id']
-
-            # if the genre does not exists (which is actually impossible), then create it 
-            genre_instance, _ = Genre.objects.get_or_create(name=genre_name, tmbd_id=tmbd_id) 
-            movie.genres.add(genre_instance)
-
-    
-    user_rating = None
-    
-    # If the user is authenticated, display ratings, comment and likes
-    if request.user.is_authenticated:
-        user_rating = Ratings.objects.filter(user=request.user, movie=movie).first()
-    
-    comments = Comment.objects.filter(movie=movie).order_by('-commented_at')
-    like = Like.objects.filter(movie=movie, is_like=True).first()
-    # print(like.count_like)
-   
-    context = {
-        "movie":movie,
-        "user_rating":user_rating, 
-        "rating_range":range(10, 0,-1),
-        "comments":comments,
-        "like":like
+        # Convert to dict for fast serialization
+        movie = {
+            "id": movie_obj.id,
+            "title": movie_obj.title,
+            "overview": movie_obj.overview,
+            "tmdb_id": movie_obj.tmdb_id,
         }
-    
-    return render(request, 'movies/movie_detail.html', context)
+        cache.set(movie_cache_key, movie, 60 * 60 * 24) # 24 Hour Cache
 
+    # 2. Handle Social Data Cache (Likes)
+    likes_cache_key = f'likes_count_{tmdb_id}'
+    likes_count = cache.get(likes_cache_key)
+
+    if likes_count is None:
+        # Use the ID from our dict
+        m_id = movie["id"]
+        likes_count = Like.objects.filter(movie_id=m_id, is_like=True).count()
+        cache.set(likes_cache_key, likes_count, 60 * 10) # 10 Minute Cache
+
+    return render(request, 'movies/movie_detail.html', {
+        "movie": movie,
+        "likes_count": likes_count
+    })
 
 @login_required
 def movie_favorites(request):
@@ -219,52 +248,68 @@ def genres_movie(request, genre_name):
     return render(request, "movies/home.html", {'movies':movies, "genre_name":genre_name})
 
 @login_required
-@transaction.atomic
 def toggle_like(request, tmdb_id):
     # the function does not actually accept a get request 
     if request.method != 'POST':
         return JsonResponse({'error':'Invalid request'}, status=400)
     
-    user = request.user
-    # lock the  selected row in the database for the duration of the transaction, for efficiency
-    movie = Movie.objects.select_for_update().get(tmdb_id=tmdb_id)  
-    
-    like_obj, created = Like.objects.get_or_create(user=user, movie=movie, defaults={'is_like':True})
-    
-    # Handling the like and like_count
-    if not created: # If the user has already liked or interred with the movie
-        
-        # if liked currently, then unlike it and decrement count
-        if like_obj.is_like:
-            like_obj.is_like = False
-            movie.count_like = max(0, movie.count_like -1)
+    user_id = request.user.id
 
-        # If unlike currently, then liked it and increment count
-        else:
-            like_obj.is_like = True
-            movie.count_like += 1
-    
-        like_obj.save()
-        movie.save()
+    #1. Trigger Celery to handle the heavy DB work (Neon)
+    toggle_like_async.delay(user_id, tmdb_id)
 
-    else:
-        # first time like and increment count
-        movie.count_like += 1
-        movie.save()
-    
+    # 2. Optimistically update Redis cache so the UI looks updated immediately
+    # (Optional: Increment/Decrement a local Redis counter here if needed)
+    cache.delete(f'likes_count_{tmdb_id}')
+
     return redirect('movie_detail', tmdb_id=tmdb_id)
+
+    # # lock the  selected row in the database for the duration of the transaction, for efficiency
+    # movie = Movie.objects.select_for_update().get(tmdb_id=tmdb_id)  
+    
+    # like_obj, created = Like.objects.get_or_create(user=user, movie=movie, defaults={'is_like':True})
+    
+    # # Handling the like and like_count
+    # if not created: # If the user has already liked or interred with the movie
+        
+    #     # if liked currently, then unlike it and decrement count
+    #     if like_obj.is_like:
+    #         like_obj.is_like = False
+    #         movie.count_like = max(0, movie.count_like -1)
+
+    #     # If unlike currently, then liked it and increment count
+    #     else:
+    #         like_obj.is_like = True
+    #         movie.count_like += 1
+    
+    #     like_obj.save()
+    #     movie.save()
+
+    # else:
+    #     # first time like and increment count
+    #     movie.count_like += 1
+    #     movie.save()
+    
+    # return redirect('movie_detail', tmdb_id=tmdb_id)
 
 
 # Fetching all liked movies
 @login_required
 def liked_movies(request):
-    all_liked_movies = Like.objects.filter(user=request.user, is_like=True)
-    movies = []
-    for r in all_liked_movies:
-        movies.append(r.movie)
-        
-    context = {'movies':movies}
-    return render(request, 'movies/all_liked_movies.html', context)
+    liked_relations = Like.objects.filter(user=request.user, is_like=True).select_related('movie')
+    movies = [rel.movie for rel in liked_relations]
+    return render(request, 'movies/all_liked_movies.html', {'movies': movies})
          
+
+
+@login_required
+def add_comment(request, tmdb_id):
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            # Send to Celery instantly!
+            save_comment_async.delay(request.user.id, tmdb_id, content)
+            
+    return redirect('movie_detail', tmdb_id=tmdb_id)
 
          

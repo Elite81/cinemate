@@ -34,36 +34,45 @@ def the_movie_detail(movie_id):
         movie="No result matches your query"
     return movie
 
+from .models import Movie
+from django.forms.models import model_to_dict
 
 def get_movie_defaults(tmdb_id):
-    movie = Movie.objects.filter(tmdb_id=tmdb_id)
-    if movie:
-        return movie
+    # 1. Check Database first
+    movie_instance = Movie.objects.filter(tmdb_id=tmdb_id).first()
+    if movie_instance:
+        # Returns the model data as a dictionary so the calling function stays consistent
+        return model_to_dict(movie_instance)
     
+    # 2. Fetch from API
     details = the_movie_detail(tmdb_id)
-    if not details:
+    
+    # 3. Robustness Check: Ensure 'details' is a dictionary and not an error string
+    if not details or not isinstance(details, dict):
         return None
     
+    # 4. Return the cleaned dictionary
     return {
-        "title":details.get("title"),
-        "original_title":details.get("original_title"),
-        "overview":details.get("overview"),
-        "poster_path":details.get("poster_path"),
-        "backdrop_path":details.get(" backdrop_path"),
-        "release_date":details.get("release_date"),
-        "vote_average":details.get("vote_average"),
-        "vote_count":details.get("vote_count"),
-        "popularity":details.get("popularity"),
-        "original_language":details.get("original_language"),
-        "adult":details.get("adult"),
-        "video":details.get("video"),
-        "genres":details.get("genres"),
-        "origin_country":details.get("origin_country"),
-        "spoken_languages":details.get("spoken_languages"),
-        "homepage":details.get("homepage"),
-        "runtime":details.get("runtime")
+        "title": details.get("title"),
+        "original_title": details.get("original_title"),
+        "overview": details.get("overview"),
+        "poster_path": details.get("poster_path"),
+        "backdrop_path": details.get("backdrop_path"), # Fixed extra space
+        "release_date": details.get("release_date"),
+        "vote_average": details.get("vote_average"),
+        "vote_count": details.get("vote_count"),
+        "popularity": details.get("popularity"),
+        "original_language": details.get("original_language"),
+        "adult": details.get("adult"),
+        "video": details.get("video"),
+        "genres": details.get("genres", []), # Default to empty list
+        "origin_country": details.get("origin_country"),
+        "spoken_languages": details.get("spoken_languages"),
+        "homepage": details.get("homepage"),
+        "runtime": details.get("runtime")
     }
 
+    
 def get_genres():
     url = f"https://api.themoviedb.org/3/genre/movie/list?api_key={settings.TMDB_API_KEY}&language=en-US"
     response = requests.get(url)
