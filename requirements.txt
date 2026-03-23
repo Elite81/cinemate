@@ -18,4 +18,4 @@ django-celery-results
 django-celery-beat
 django-extensions
 gevent
-django_redis
+django-redis
