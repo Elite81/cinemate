@@ -100,4 +100,23 @@ def get_movie_by_genres(genre_id, page=1):
     if response.status_code == 200:
         return response.json()['results']
     return []
+
+
+def fetch_and_save_movie(tmdb_id):
+    url = f"https://api.themoviedb.org/3/movie/{tmdb_id}?api_key={settings.TMDB_API_KEY}"
+    response = requests.get(url)
     
+    if response.status_code == 200:
+        data = response.json()
+        # Create the movie in your DB
+        movie, created = Movie.objects.get_or_create(
+            tmdb_id=tmdb_id,
+            defaults={
+                'title': data.get('title'),
+                'overview': data.get('overview'),
+                'poster_path': data.get('poster_path'),
+                # ... add your other fields ...
+            }
+        )
+        return movie
+    return None

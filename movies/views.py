@@ -140,12 +140,12 @@ def movie_details(request, tmdb_id):
     # 4. Handle Social Data (Likes)
     likes_cache_key = f'likes_count_{tmdb_id}'
     likes_count = cache.get(likes_cache_key)
-
+    m_id = movie["id"]
     if likes_count is None:
-        # Use the ID from our dict
-        m_id = movie["id"]
         likes_count = Like.objects.filter(movie_id=m_id, is_like=True).count()
-        cache.set(likes_cache_key, likes_count, 60 * 10)
+        # Increase this cache time; likes don't need to be frame-perfect
+        cache.set(likes_cache_key, likes_count, 600)
+
 
     return render(request, 'movies/movie_detail.html', {
         "movie": movie,
