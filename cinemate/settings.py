@@ -21,6 +21,8 @@ from celery import Celery
 SECRET_KEY = os.getenv("SECRET_KEY")
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 
+from celery.schedules import crontab
+
 # DEBUG = os.getenv('DEBUG' 'Fasle') == 'True'
 
 DEBUG = True
@@ -304,3 +306,12 @@ SESSION_CACHE_ALIAS = "default"
 
 # settings.py
 AXES_ENABLED = False  # Temporarily disable lockout for the duration of the test
+
+
+
+CELERY_BEAT_SCHEDULE = {
+    'update-movies-every-2-hours': {
+        'task': 'movies.tasks.update_popular_movies_cache',
+        'schedule': crontab(minute=0, hour='*/2'), # Runs at 00:00, 02:00, 04:00, etc.
+    },
+}

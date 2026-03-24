@@ -63,32 +63,81 @@ def search(request):
 
     return render(request, 'movies/search_movies.html', {'movies': results, 'query': query})
 
+# @measure_time('Movie Details')
+# def movie_details(request, tmdb_id):
+#     movie_cache_key = f'movie_data_{tmdb_id}'
+#     movie = cache.get(movie_cache_key)
+
+#     # 1. Handle Movie Data Cache
+#     if movie == "NOT_FOUND":
+#         raise Http404("Movie not found")
+        
+#     if movie is None:
+#         # DB Lookup
+#         movie_obj = Movie.objects.filter(tmdb_id=tmdb_id).first()
+#         if not movie_obj:
+#             cache.set(movie_cache_key, "NOT_FOUND", 3600) # Cache the 404
+#             raise Http404("Movie not found")
+
+#         # Convert to dict for fast serialization
+#         movie = {
+#             "id": movie_obj.id,
+#             "title": movie_obj.title,
+#             "overview": movie_obj.overview,
+#             "tmdb_id": movie_obj.tmdb_id,
+#         }
+#         cache.set(movie_cache_key, movie, 60 * 60 * 24) # 24 Hour Cache
+
+#     # 2. Handle Social Data Cache (Likes)
+#     likes_cache_key = f'likes_count_{tmdb_id}'
+#     likes_count = cache.get(likes_cache_key)
+
+#     if likes_count is None:
+#         # Use the ID from our dict
+#         m_id = movie["id"]
+#         likes_count = Like.objects.filter(movie_id=m_id, is_like=True).count()
+#         cache.set(likes_cache_key, likes_count, 60 * 10) # 10 Minute Cache
+
+#     return render(request, 'movies/movie_detail.html', {
+#         "movie": movie,
+#         "likes_count": likes_count
+#     })
+
+
 @measure_time('Movie Details')
 def movie_details(request, tmdb_id):
     movie_cache_key = f'movie_data_{tmdb_id}'
     movie = cache.get(movie_cache_key)
 
-    # 1. Handle Movie Data Cache
     if movie == "NOT_FOUND":
         raise Http404("Movie not found")
         
     if movie is None:
-        # DB Lookup
+        # 1. DB Lookup
         movie_obj = Movie.objects.filter(tmdb_id=tmdb_id).first()
+        
+        # 2. NEW: API Fallback
         if not movie_obj:
-            cache.set(movie_cache_key, "NOT_FOUND", 3600) # Cache the 404
+            # Import your utility that fetches and SAVES the movie to the DB
+            from .utils import fetch_and_save_movie 
+            movie_obj = fetch_and_save_movie(tmdb_id)
+
+        # 3. Final Check
+        if not movie_obj:
+            cache.set(movie_cache_key, "NOT_FOUND", 3600)
             raise Http404("Movie not found")
 
-        # Convert to dict for fast serialization
+        # Convert to dict for caching
         movie = {
             "id": movie_obj.id,
             "title": movie_obj.title,
             "overview": movie_obj.overview,
             "tmdb_id": movie_obj.tmdb_id,
+            "poster_path": movie_obj.poster_path, # Add your other fields
         }
-        cache.set(movie_cache_key, movie, 60 * 60 * 24) # 24 Hour Cache
+        cache.set(movie_cache_key, movie, 60 * 60 * 24)
 
-    # 2. Handle Social Data Cache (Likes)
+    # 4. Handle Social Data (Likes)
     likes_cache_key = f'likes_count_{tmdb_id}'
     likes_count = cache.get(likes_cache_key)
 
@@ -96,7 +145,7 @@ def movie_details(request, tmdb_id):
         # Use the ID from our dict
         m_id = movie["id"]
         likes_count = Like.objects.filter(movie_id=m_id, is_like=True).count()
-        cache.set(likes_cache_key, likes_count, 60 * 10) # 10 Minute Cache
+        cache.set(likes_cache_key, likes_count, 60 * 10)
 
     return render(request, 'movies/movie_detail.html', {
         "movie": movie,
