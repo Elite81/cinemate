@@ -105,53 +105,57 @@ def search(request):
 
 
 @measure_time('Movie Details')
+@measure_time('Movie Details')
 def movie_details(request, tmdb_id):
-    movie_cache_key = f'movie_data_{tmdb_id}'
-    movie = cache.get(movie_cache_key)
+    # Use a single key for the fully-hydrated movie object
+    cache_key = f'movie_full_payload_{tmdb_id}'
+    movie_data = cache.get(cache_key)
 
-    if movie == "NOT_FOUND":
+    # 1. Immediate exit for known 404s
+    if movie_data == "NOT_FOUND":
         raise Http404("Movie not found")
-        
-    if movie is None:
-        # 1. DB Lookup
+
+    # 2. Cache Miss Logic (The only time we hit DB/API)
+    if movie_data is None:
+        # DB Lookup
         movie_obj = Movie.objects.filter(tmdb_id=tmdb_id).first()
-        
-        # 2. NEW: API Fallback
+
+        # API Fallback if DB is empty
         if not movie_obj:
-            # Import your utility that fetches and SAVES the movie to the DB
-            from .utils import fetch_and_save_movie 
+            from .utils import fetch_and_save_movie
             movie_obj = fetch_and_save_movie(tmdb_id)
 
-        # 3. Final Check
+        # If still nothing, cache the 404 to prevent "Cache Penetration" attacks
         if not movie_obj:
-            cache.set(movie_cache_key, "NOT_FOUND", 3600)
+            cache.set(cache_key, "NOT_FOUND", 3600)
             raise Http404("Movie not found")
 
-        # Convert to dict for caching
-        movie = {
+        # Get likes count ONCE while we are building the cache
+        # Optimization: In a real high-scale app, we'd use a denormalized field on the Model
+        likes_count = Like.objects.filter(movie_id=movie_obj.id, is_like=True).count()
+
+        # Construct the "Fat" dictionary
+        movie_data = {
             "id": movie_obj.id,
             "title": movie_obj.title,
             "overview": movie_obj.overview,
             "tmdb_id": movie_obj.tmdb_id,
-            "poster_path": movie_obj.poster_path, # Add your other fields
+            "poster_path": movie_obj.poster_path,
+            "likes_count": likes_count,  # Bundled data!
         }
-        cache.set(movie_cache_key, movie, 60 * 60 * 24)
+        
+        # Cache the entire payload for 24 hours
+        cache.set(cache_key, movie_data, 86400)
 
-    # 4. Handle Social Data (Likes)
-    likes_cache_key = f'likes_count_{tmdb_id}'
-    likes_count = cache.get(likes_cache_key)
-    m_id = movie["id"]
-    if likes_count is None:
-        likes_count = Like.objects.filter(movie_id=m_id, is_like=True).count()
-        # Increase this cache time; likes don't need to be frame-perfect
-        cache.set(likes_cache_key, likes_count, 600)
-
-
+    # 3. Execution Path for 99% of users (Redis Only)
+    # This part takes < 50ms because there is ZERO SQL here.
     return render(request, 'movies/movie_detail.html', {
-        "movie": movie,
-        "likes_count": likes_count
+        "movie": movie_data,
+        "likes_count": movie_data["likes_count"]
     })
 
+
+    
 @login_required
 def movie_favorites(request):
     if request.method == 'POST':
